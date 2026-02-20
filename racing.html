@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velocity X - Racing & Social Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        brand: "#ff2a2a",
+                        darkBg: "#0B0C10",
+                        surface: "#1F2833",
+                        accent: "#45A29E"
+                    },
+                    fontFamily: {
+                        display: ['Orbitron', 'sans-serif'],
+                        sans: ['Rajdhani', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0B0C10;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .glass-panel {
+            background: rgba(31, 40, 51, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Game Canvas */
+        #game-canvas {
+            width: 100%;
+            height: 500px;
+            background: #111;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(255, 42, 42, 0.3);
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Top Navigation -->
+    <header class="glass-panel sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b border-brand/30">
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-brand text-4xl">airport_shuttle</span>
+            <h1 class="font-display text-2xl font-black italic tracking-wider text-white">VELOCITY<span
+                    class="text-brand">X</span></h1>
+        </div>
+
+        <nav class="flex gap-2 bg-darkBg/50 p-1 rounded-lg border border-white/10">
+            <button onclick="switchTab('hub')"
+                class="tab-btn px-6 py-2 rounded-md font-bold text-sm tracking-widest uppercase transition-all bg-brand text-white shadow-[0_0_10px_rgba(255,42,42,0.5)]">Hub</button>
+            <button onclick="switchTab('garage')"
+                class="tab-btn px-6 py-2 rounded-md font-bold text-sm tracking-widest uppercase text-gray-400 hover:text-white transition-all">Garage</button>
+            <button onclick="switchTab('social')"
+                class="tab-btn px-6 py-2 rounded-md font-bold text-sm tracking-widest uppercase text-gray-400 hover:text-white transition-all">Social</button>
+        </nav>
+
+        <div class="flex items-center gap-4">
+            <div class="relative group cursor-pointer">
+                <span
+                    class="material-symbols-outlined text-gray-400 hover:text-white transition-colors">notifications</span>
+                <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-brand rounded-full animate-pulse"></span>
+                <div
+                    class="absolute right-0 top-full mt-4 w-72 glass-panel rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all p-4">
+                    <h4 class="font-display font-bold text-sm mb-3 text-brand">CHALLENGES</h4>
+                    <div class="space-y-3">
+                        <div class="bg-darkBg p-3 rounded-lg border border-brand/20">
+                            <p class="text-sm font-bold">SpeedDemon69 <span class="text-gray-400 font-normal">challenged
+                                    you to</span> Circuit Sprint!</p>
+                            <div class="flex gap-2 mt-2">
+                                <button
+                                    class="flex-1 bg-brand text-white text-xs font-bold py-1.5 rounded hover:bg-white hover:text-brand transition-colors">Accept</button>
+                                <button
+                                    class="flex-1 bg-surface text-white text-xs font-bold py-1.5 rounded hover:bg-gray-600 transition-colors">Decline</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div
+                class="w-10 h-10 rounded-full bg-gradient-to-tr from-brand to-orange-500 flex items-center justify-center font-display font-bold border-2 border-darkBg">
+                P1</div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-6">
+
+        <!-- HUB TAB -->
+        <section id="hub" class="tab-content active">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Mode Selector -->
+                <div class="lg:col-span-2 flex flex-col gap-4">
+                    <h2 class="font-display text-2xl font-bold uppercase tracking-widest mb-2"><span
+                            class="text-brand">Race</span> Modes</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        <div class="glass-panel p-6 rounded-xl relative overflow-hidden group cursor-pointer border-l-4 border-l-brand hover:border-l-white transition-colors"
+                            onclick="startGame('single')">
+                            <div
+                                class="absolute -right-10 -bottom-10 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <span class="material-symbols-outlined text-[150px]">person</span>
+                            </div>
+                            <h3 class="font-display text-xl font-bold mb-2">Single Player</h3>
+                            <p class="text-gray-400 text-sm mb-4">Race against aggressive AI. Time trials, Sprints, and
+                                Circuit cups.</p>
+                            <span
+                                class="inline-block bg-brand/20 text-brand text-xs font-bold px-2 py-1 rounded">Difficulty:
+                                Scalable</span>
+                        </div>
+
+                        <div class="glass-panel p-6 rounded-xl relative overflow-hidden group cursor-pointer border-l-4 border-l-accent hover:border-l-white transition-colors"
+                            onclick="startGame('multi')">
+                            <div
+                                class="absolute -right-10 -bottom-10 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <span class="material-symbols-outlined text-[150px]">public</span>
+                            </div>
+                            <h3 class="font-display text-xl font-bold mb-2">Multiplayer</h3>
+                            <p class="text-gray-400 text-sm mb-4">Real-time matchmaking worldwide with anti-cheat
+                                monitoring.</p>
+                            <span
+                                class="inline-block bg-accent/20 text-accent text-xs font-bold px-2 py-1 rounded">Global
+                                Ranked</span>
+                        </div>
+
+                        <div class="glass-panel p-6 rounded-xl relative overflow-hidden group cursor-pointer border-l-4 border-l-purple-500 hover:border-l-white transition-colors md:col-span-2"
+                            onclick="startGame('challenge')">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0">
+                                    <span class="material-symbols-outlined text-3xl text-purple-400">swords</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-display text-xl font-bold mb-1">Friends Challenge</h3>
+                                    <p class="text-gray-400 text-sm">Create a private lobby, challenge local times, or
+                                        send direct invites.</p>
+                                </div>
+                                <button
+                                    class="ml-auto bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg font-bold text-sm transition-colors">Invite</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Leaderboards -->
+                <div class="glass-panel rounded-xl p-6 flex flex-col">
+                    <h2 class="font-display text-xl font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-brand">leaderboard</span> Top Racers
+                    </h2>
+                    <ul class="flex-1 flex flex-col justify-between space-y-2">
+                        <li class="flex items-center justify-between p-3 bg-darkBg rounded-lg border border-brand/30">
+                            <div class="flex items-center gap-3">
+                                <span class="font-display font-bold text-brand w-4">1</span>
+                                <span class="font-bold">GhostRider</span>
+                            </div>
+                            <span class="font-display text-sm text-gray-400">01:14.22</span>
+                        </li>
+                        <li class="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                            <div class="flex items-center gap-3">
+                                <span class="font-display font-bold text-gray-400 w-4">2</span>
+                                <span class="font-bold">ApexPredator</span>
+                            </div>
+                            <span class="font-display text-sm text-gray-400">01:15.01</span>
+                        </li>
+                        <li class="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                            <div class="flex items-center gap-3">
+                                <span class="font-display font-bold text-gray-400 w-4">3</span>
+                                <span class="font-bold">NeoDrift</span>
+                            </div>
+                            <span class="font-display text-sm text-gray-400">01:16.89</span>
+                        </li>
+                        <li
+                            class="flex items-center justify-between p-3 bg-accent/20 rounded-lg border border-accent/30 mt-4">
+                            <div class="flex items-center gap-3">
+                                <span class="font-display font-bold text-accent w-4">42</span>
+                                <span class="font-bold">You</span>
+                            </div>
+                            <span class="font-display text-sm text-accent">01:32.44</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Game Container (Hidden by default, shown when race starts) -->
+            <div id="game-container" class="hidden">
+                <div class="flex justify-between items-end mb-4">
+                    <h2 class="font-display text-2xl font-bold uppercase tracking-widest">Live Race: <span
+                            id="current-mode" class="text-brand"></span></h2>
+                    <button onclick="endGame()"
+                        class="bg-red-500/20 text-red-500 px-4 py-2 rounded font-bold hover:bg-red-500 hover:text-white transition-colors">Quit
+                        Race</button>
+                </div>
+                <div
+                    class="relative w-full h-[500px] border border-white/10 rounded-xl overflow-hidden shadow-2xl bg-black">
+                    <!-- HTML5 pseudo-3D Canvas Game -->
+                    <canvas id="raceCanvas" class="w-full h-full"></canvas>
+
+                    <!-- Game Overlay UI -->
+                    <div class="absolute top-4 left-4 p-4 glass-panel rounded-lg">
+                        <div class="font-display text-3xl font-black text-white" id="game-speed">0 <span
+                                class="text-sm text-brand">MPH</span></div>
+                        <div class="text-xs text-gray-400 font-bold uppercase tracking-widest">Speed</div>
+                    </div>
+                    <div class="absolute top-4 right-4 p-4 glass-panel rounded-lg text-right">
+                        <div class="font-display text-xl font-bold text-accent" id="game-time">00:00.00</div>
+                        <div class="text-xs text-gray-400 font-bold uppercase tracking-widest">Lap Time</div>
+                    </div>
+                    <div
+                        class="absolute bottom-4 left-4 right-4 flex justify-between px-8 text-white/50 text-sm tracking-widest font-bold">
+                        <span>[⬅️] Left</span>
+                        <span>[⬆️] Accelerate</span>
+                        <span>[⬇️] Brake</span>
+                        <span>[➡️] Right</span>
+                        <span class="text-brand">[SPACE] Nitro</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- GARAGE TAB -->
+        <section id="garage" class="tab-content">
+            <h2 class="font-display text-3xl font-bold uppercase tracking-widest mb-6"><span
+                    class="text-white">The</span> <span class="text-accent">Garage</span></h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Vehicle Preview -->
+                <div
+                    class="lg:col-span-2 glass-panel p-8 rounded-xl flex items-center justify-center relative min-h-[400px]">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-accent/20 to-transparent rounded-xl pointer-events-none">
+                    </div>
+                    <!-- Placeholder for 3D car or image -->
+                    <img src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&q=80" alt="Supercar"
+                        class="w-full max-w-lg object-contain drop-shadow-[0_20px_20px_rgba(0,0,0,0.8)] rounded-xl opacity-90 mix-blend-screen">
+
+                    <div
+                        class="absolute bottom-6 left-6 p-4 bg-darkBg/90 border border-white/10 rounded-lg backdrop-blur">
+                        <h3 class="font-display text-2xl font-black">Xeno LX-9</h3>
+                        <p class="text-sm text-brand font-bold uppercase tracking-widest">Class S Tier</p>
+                    </div>
+                </div>
+
+                <!-- Upgrades -->
+                <div class="glass-panel p-6 rounded-xl flex flex-col gap-4">
+                    <h3 class="font-display text-xl font-bold uppercase tracking-widest border-b border-white/10 pb-2">
+                        Upgrades</h3>
+
+                    <div class="space-y-4 flex-1">
+                        <div class="bg-darkBg p-3 rounded-lg border border-white/5">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-sm">Engine</span>
+                                <span class="text-brand text-xs font-bold">LVL 4</span>
+                            </div>
+                            <div class="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                                <div class="bg-brand h-full" style="width: 80%"></div>
+                            </div>
+                            <button
+                                class="w-full mt-2 bg-white/5 hover:bg-white/10 text-xs py-1 rounded transition-colors font-bold">+
+                                Upgrade ($4,500)</button>
+                        </div>
+
+                        <div class="bg-darkBg p-3 rounded-lg border border-white/5">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-sm">Tires & Grip</span>
+                                <span class="text-accent text-xs font-bold">LVL 2</span>
+                            </div>
+                            <div class="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                                <div class="bg-accent h-full" style="width: 40%"></div>
+                            </div>
+                            <button
+                                class="w-full mt-2 bg-white/5 hover:bg-white/10 text-xs py-1 rounded transition-colors font-bold">+
+                                Upgrade ($1,200)</button>
+                        </div>
+
+                        <div class="bg-darkBg p-3 rounded-lg border border-white/5">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-sm">Nitro System</span>
+                                <span class="text-purple-400 text-xs font-bold">LVL 5 (MAX)</span>
+                            </div>
+                            <div class="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                                <div class="bg-purple-400 h-full" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SOCIAL TAB (Videos) -->
+        <section id="social" class="tab-content relative">
+            <div class="flex justify-between items-end mb-6">
+                <h2 class="font-display text-3xl font-bold uppercase tracking-widest"><span
+                        class="text-white">Community</span> <span class="text-brand">Clips</span></h2>
+                <button onclick="document.getElementById('upload-video-modal').classList.remove('hidden')"
+                    class="bg-brand text-white px-6 py-3 rounded-xl font-bold text-sm uppercase tracking-widest hover:brightness-125 transition-all shadow-[0_0_15px_rgba(255,42,42,0.4)] flex items-center gap-2">
+                    <span class="material-symbols-outlined">upload</span> Upload Clip
+                </button>
+            </div>
+
+            <!-- Video Feed Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Video Post 1 -->
+                <div class="glass-panel p-4 rounded-xl border border-white/10 group">
+                    <div class="relative aspect-video bg-black rounded-lg overflow-hidden cursor-pointer"
+                        onclick="togglePlay(this)">
+                        <video src="https://videos.pexels.com/video-files/5309358/5309358-hd_1920_1080_30fps.mp4"
+                            class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                            loop muted></video>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent pointer-events-none">
+                        </div>
+                        <div class="absolute bottom-3 left-3 flex gap-2">
+                            <span
+                                class="bg-brand text-white text-[10px] font-bold px-2 py-0.5 rounded font-display tracking-widest uppercase">Epic
+                                Overtake</span>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div
+                                class="w-8 h-8 rounded-full bg-surface flex items-center justify-center font-bold text-xs border border-white/20">
+                                GT</div>
+                            <div>
+                                <p class="text-sm font-bold">GearHead_99</p>
+                                <p class="text-xs text-gray-500">1 hour ago • Public</p>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-300">Slipped right past them on the final corner! 🏎️💨 #VelocityX
+                            #ClutchMoments #Overtake</p>
+
+                        <div class="flex items-center gap-6 mt-4 pt-4 border-t border-white/5">
+                            <button
+                                class="flex items-center gap-1 hover:text-brand transition-colors text-gray-400 font-bold text-sm"><span
+                                    class="material-symbols-outlined text-lg">favorite</span> 1.2k</button>
+                            <button
+                                class="flex items-center gap-1 hover:text-white transition-colors text-gray-400 font-bold text-sm"><span
+                                    class="material-symbols-outlined text-lg">chat_bubble</span> 84</button>
+                            <button
+                                class="flex items-center gap-1 hover:text-white transition-colors text-gray-400 font-bold text-sm ml-auto"><span
+                                    class="material-symbols-outlined text-lg">share</span></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Post 2 -->
+                <div class="glass-panel p-4 rounded-xl border border-white/10 group">
+                    <div class="relative aspect-video bg-black rounded-lg overflow-hidden cursor-pointer"
+                        onclick="togglePlay(this)">
+                        <video src="https://videos.pexels.com/video-files/2491295/2491295-hd_1920_1080_30fps.mp4"
+                            class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                            loop muted></video>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent pointer-events-none">
+                        </div>
+                        <div class="absolute bottom-3 left-3 flex gap-2">
+                            <span
+                                class="bg-accent text-white text-[10px] font-bold px-2 py-0.5 rounded font-display tracking-widest uppercase">Best
+                                Lap</span>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div
+                                class="w-8 h-8 rounded-full bg-surface flex items-center justify-center font-bold text-xs border border-white/20">
+                                SD</div>
+                            <div>
+                                <p class="text-sm font-bold">SlideDrifter</p>
+                                <p class="text-xs text-gray-500">3 hours ago • Friends Only</p>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-300">Got the new global record on neon circuit! Try and beat this.
+                            💯 #TimeTrial</p>
+
+                        <div class="flex items-center gap-6 mt-4 pt-4 border-t border-white/5">
+                            <button
+                                class="flex items-center gap-1 hover:text-brand transition-colors text-brand font-bold text-sm"><span
+                                    class="material-symbols-outlined text-lg">favorite</span> 450</button>
+                            <button
+                                class="flex items-center gap-1 hover:text-white transition-colors text-gray-400 font-bold text-sm"><span
+                                    class="material-symbols-outlined text-lg">chat_bubble</span> 12</button>
+                            <button
+                                class="flex items-center gap-1 hover:text-white transition-colors text-gray-400 font-bold text-sm ml-auto"><span
+                                    class="material-symbols-outlined text-lg">share</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Upload Video Modal -->
+    <div id="upload-video-modal"
+        class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-2xl rounded-2xl border border-white/20 overflow-hidden shadow-2xl">
+            <div class="p-6 border-b border-white/10 flex justify-between items-center bg-surface/50">
+                <h3 class="font-display text-2xl font-bold">Post Gameplay Clip</h3>
+                <button onclick="document.getElementById('upload-video-modal').classList.add('hidden')"
+                    class="text-gray-400 hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Preview / Upload Zone -->
+                <div class="flex flex-col gap-4">
+                    <div class="aspect-video bg-black rounded-lg border-2 border-dashed border-white/20 flex flex-col items-center justify-center text-gray-400 hover:bg-white/5 hover:border-brand transition-colors cursor-pointer relative overflow-hidden"
+                        onclick="document.getElementById('video-file-input').click()">
+                        <span class="material-symbols-outlined text-4xl mb-2 text-brand">cloud_upload</span>
+                        <p class="text-sm font-bold">Click to select recording</p>
+                        <p class="text-xs mt-1">or record directly in-game</p>
+                        <input type="file" accept="video/*" id="video-file-input" class="hidden"
+                            onchange="previewUploadVideo(this)">
+                        <video id="upload-preview" class="absolute inset-0 w-full h-full object-cover hidden" loop muted
+                            playsinline autoplay></video>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button
+                            class="flex-1 bg-surface py-2 rounded text-xs font-bold hover:bg-white/10 uppercase tracking-widest"><span
+                                class="material-symbols-outlined text-sm align-middle mr-1">content_cut</span>
+                            Trim</button>
+                        <button
+                            class="flex-1 bg-surface py-2 rounded text-xs font-bold hover:bg-white/10 uppercase tracking-widest"><span
+                                class="material-symbols-outlined text-sm align-middle mr-1">auto_awesome</span> Auto
+                            Highlight</button>
+                    </div>
+                </div>
+
+                <!-- Post Details -->
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Caption &
+                            Tags</label>
+                        <textarea
+                            class="w-full bg-darkBg border border-white/10 rounded-lg p-3 text-sm min-h-[100px] outline-none focus:border-brand transition-colors text-white"
+                            placeholder="Wow what a race! #VelocityX"></textarea>
+                    </div>
+
+                    <div>
+                        <label
+                            class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Privacy</label>
+                        <select
+                            class="w-full bg-darkBg border border-white/10 rounded-lg p-3 text-sm outline-none focus:border-brand transition-colors text-white appearance-none">
+                            <option>🌍 Public (Global Feed)</option>
+                            <option>👥 Friends Only</option>
+                            <option>🔒 Private Vault</option>
+                        </select>
+                    </div>
+
+                    <label class="flex items-center gap-2 cursor-pointer mt-2">
+                        <input type="checkbox"
+                            class="rounded bg-darkBg border-white/20 text-brand focus:ring-brand accent-brand">
+                        <span class="text-sm text-gray-300">Submit to global "Best Lap" Leaderboard</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="p-6 border-t border-white/10 flex justify-end gap-3 bg-darkBg/50">
+                <button onclick="document.getElementById('upload-video-modal').classList.add('hidden')"
+                    class="px-6 py-2 rounded font-bold text-sm bg-white/5 hover:bg-white/10 transition-colors uppercase tracking-widest">Cancel</button>
+                <button
+                    class="px-8 py-2 rounded font-bold text-sm bg-brand text-white hover:brightness-125 transition-all uppercase tracking-widest shadow-[0_0_15px_rgba(255,42,42,0.4)]"
+                    onclick="alert('Video uploaded to Velocity X servers successfully!'); document.getElementById('upload-video-modal').classList.add('hidden');">Post
+                    Video</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/racing-game.js"></script>
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-brand', 'text-white', 'shadow-[0_0_10px_rgba(255,42,42,0.5)]');
+                el.classList.add('text-gray-400');
+            });
+
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.remove('text-gray-400');
+            event.currentTarget.classList.add('bg-brand', 'text-white', 'shadow-[0_0_10px_rgba(255,42,42,0.5)]');
+        }
+
+        function togglePlay(container) {
+            const video = container.querySelector('video');
+            if (video.paused) {
+                video.play();
+                video.muted = false; // Unmute on click to play
+            } else {
+                video.pause();
+                video.muted = true;
+            }
+        }
+
+        function previewUploadVideo(input) {
+            const file = input.files[0];
+            if (file) {
+                const videoPreview = document.getElementById('upload-preview');
+                videoPreview.src = URL.createObjectURL(file);
+                videoPreview.classList.remove('hidden');
+            }
+        }
+
+        function startGame(mode) {
+            const modes = {
+                'single': 'Single Player Time Attack',
+                'multi': 'Global Ranked Match',
+                'challenge': 'Friends Private Room'
+            };
+            document.getElementById('current-mode').textContent = modes[mode];
+            document.getElementById('game-container').classList.remove('hidden');
+            document.getElementById('game-container').scrollIntoView({ behavior: 'smooth' });
+
+            // Notify the game engine to start
+            if (typeof initRacingGame === 'function') {
+                initRacingGame();
+            }
+        }
+
+        function endGame() {
+            document.getElementById('game-container').classList.add('hidden');
+            if (typeof stopRacingGame === 'function') {
+                stopRacingGame();
+            }
+        }
+    </script>
+</body>
+
+</html>

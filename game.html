@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Elevator Squat Game - Exact Rules</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
+
+    <style>
+        body {
+            margin: 0;
+            background: #0a0c0b;
+            color: white;
+            font-family: 'Lexend', sans-serif;
+            text-align: center;
+            overflow-x: hidden;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-top: 20px;
+            color: #bfff00;
+            text-shadow: 0 0 10px rgba(191, 255, 0, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #controls {
+            margin: 15px;
+        }
+
+        button,
+        input[type="file"]::file-selector-button {
+            padding: 12px 24px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 12px;
+            background: #bfff00;
+            color: #0a0c0b;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 15px rgba(191, 255, 0, 0.2);
+        }
+
+        button:hover,
+        input[type="file"]::file-selector-button:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(191, 255, 0, 0.4);
+            background: #cfff33;
+        }
+
+        #main-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        #top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-sizing: border-box;
+        }
+
+        #container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 40px;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        /* Shaft */
+        #shaft-wrapper {
+            perspective: 800px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 250px;
+            height: 480px;
+            transition: all 0.8s ease;
+        }
+
+        #shaft {
+            position: relative;
+            width: 160px;
+            height: 480px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            background: linear-gradient(to top, #161a18, #0a0c0b);
+            overflow: hidden;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+            transition: all 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transform-style: preserve-3d;
+        }
+
+        /* POV Modes */
+        #main-wrapper.pov-front #shaft {
+            transform: rotateX(0deg) rotateZ(0deg) scale(1);
+        }
+
+        #main-wrapper.pov-iso #shaft {
+            transform: rotateX(60deg) rotateZ(-30deg) scale(0.9);
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8), -30px 40px 40px rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(191, 255, 0, 0.3);
+        }
+
+        #main-wrapper.pov-iso #elevator {
+            transform: translateZ(20px);
+            box-shadow: -15px 15px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba(191, 255, 0, 0.2);
+        }
+
+        #main-wrapper.pov-first #shaft-wrapper {
+            z-index: 100;
+            position: relative;
+            transform: translateX(-150px);
+        }
+
+        #main-wrapper.pov-first #shaft {
+            transform: scale(3.5) translateY(20px) translateZ(50px);
+        }
+
+        /* Elevator */
+        #elevator {
+            position: absolute;
+            width: 100%;
+            height: 80px;
+            bottom: 85%;
+            display: flex;
+            transition: bottom 0.15s linear, background 0.3s ease, box-shadow 0.3s ease;
+            border-radius: 10px;
+            box-sizing: border-box;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Default */
+        .elevator-normal {
+            background: rgba(191, 255, 0, 0.8);
+            box-shadow: 0 0 20px rgba(191, 255, 0, 0.2);
+        }
+
+        /* Success (Valid) */
+        .elevator-success {
+            background: #0ff05a;
+            box-shadow: 0 0 40px #0ff05a;
+            transform: scale(1.05);
+        }
+
+        /* Almost */
+        .elevator-almost {
+            background: #ffd600;
+            box-shadow: 0 0 40px #ffd600;
+            transform: scale(1.02);
+        }
+
+        /* Mini */
+        .elevator-mini {
+            background: #00e5ff;
+            box-shadow: 0 0 40px #00e5ff;
+            animation: flicker 0.2s alternate 3;
+        }
+
+        @keyframes flicker {
+            0% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Fail (Invalid) */
+        .elevator-fail {
+            background: #ff1744;
+            box-shadow: 0 0 40px #ff1744;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        /* Doors */
+        .door {
+            width: 50%;
+            height: 100%;
+            background: #1e1e1e;
+            transition: transform 0.6s ease;
+        }
+
+        .open-left {
+            transform: translateX(-100%);
+        }
+
+        .open-right {
+            transform: translateX(100%);
+        }
+
+        .open-left-half {
+            transform: translateX(-50%);
+        }
+
+        .open-right-half {
+            transform: translateX(50%);
+        }
+
+        #game-info {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .hud-panel {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            text-align: left;
+        }
+
+        .hud-title {
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .hud-value {
+            font-size: 32px;
+            font-weight: 900;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .score-highlight {
+            color: #bfff00;
+        }
+
+        .combo-highlight {
+            color: #ff9800;
+            font-size: 24px;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from {
+                opacity: 0.8;
+                transform: scale(1);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+        }
+
+        #challenges-panel {
+            margin-top: 20px;
+        }
+
+        .challenge-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #444;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .challenge-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(5px);
+        }
+
+        .challenge-item.active {
+            border-left-color: #bfff00;
+            background: rgba(191, 255, 0, 0.1);
+        }
+
+        .challenge-item.completed {
+            border-left-color: #0ff05a;
+            background: rgba(15, 240, 90, 0.1);
+            opacity: 0.7;
+            text-decoration: line-through;
+        }
+
+        .challenge-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: white;
+        }
+
+        .challenge-desc {
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        video,
+        canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        #cameraContainer {
+            position: relative;
+            width: 640px;
+            height: 480px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            background: #000;
+        }
+
+        /* Particle System */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            z-index: 100;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="main-wrapper" class="pov-front">
+        <div id="top-bar">
+            <div style="text-align: left;">
+                <h2 style="margin-top: 0; margin-bottom: 10px;">🛗 FitQuest: Elevator Rush</h2>
+                <div id="pov-controls">
+                    <button onclick="setPOV('front')">🟦 2D Front</button>
+                    <button onclick="setPOV('iso')">🧊 3D Isometric</button>
+                    <button onclick="setPOV('first')">👁️ First Person</button>
+                </div>
+            </div>
+            <div id="controls" style="margin-top: 0;">
+                <button onclick="startCamera()">🎥 Play Live</button>
+                <input type="file" id="uploadVideo" accept="video/*">
+                <button onclick="endSession()" style="background: #ff1744; color: white;">🛑 End Session</button>
+            </div>
+        </div>
+
+        <div id="container">
+
+            <div id="game-info" style="width: 250px;">
+                <div class="hud-panel">
+                    <div class="hud-title">Current Score</div>
+                    <div class="hud-value"><span id="score" class="score-highlight">0</span> <span id="combo"
+                            class="combo-highlight" style="display:none;">x1</span></div>
+                </div>
+
+                <div class="hud-panel">
+                    <div class="hud-title">Squats</div>
+                    <div class="hud-value" id="reps">0</div>
+                </div>
+
+                <div class="hud-panel">
+                    <div class="hud-title">Form Rating</div>
+                    <div class="hud-value" style="font-size: 20px;" id="state">STANDING</div>
+                    <div style="color: #666; font-size: 12px; margin-top: 5px;">Angle: <span id="angle">0</span>°</div>
+                </div>
+            </div>
+
+            <div id="cameraContainer">
+                <video id="video" width="640" height="480" autoplay muted></video>
+                <canvas id="canvas" width="640" height="480"></canvas>
+            </div>
+
+            <div id="shaft-wrapper">
+                <div id="shaft">
+                    <div id="elevator" class="elevator-normal">
+                        <div id="leftDoor" class="door"></div>
+                        <div id="rightDoor" class="door"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="challenges-panel" style="width: 280px; text-align: left;">
+                <h3
+                    style="color: #bfff00; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                    🏆 Daily Challenges</h3>
+                <div id="challenges-list">
+                    <!-- Populated by JS -->
+                </div>
+
+                <button onclick="shareScore()"
+                    style="width: 100%; margin-top: 20px; margin-left: 0; background: #fff; color: #000;">
+                    ⚔️ Challenge Friends
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function setPOV(pov) {
+            const wrapper = document.getElementById('main-wrapper');
+            wrapper.className = 'pov-' + pov;
+        }
+
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        const elevator = document.getElementById("elevator");
+        const leftDoor = document.getElementById("leftDoor");
+        const rightDoor = document.getElementById("rightDoor");
+
+        let camera = null;
+        let state, reps, minAngle;
+        let angleBuffer = [];
+
+        // Gamification state
+        let score = 0;
+        let comboMultiplier = 1;
+        let comboTimeout;
+
+        const challenges = [
+            { id: 1, title: "Warm Up", desc: "Complete 5 squats", target: 5, type: 'reps', progress: 0, completed: false },
+            { id: 2, title: "Deep Burn", desc: "3 perfect deep squats", target: 3, type: 'deep', progress: 0, completed: false },
+            { id: 3, title: "Combo Master", desc: "Reach 3x combo multiplier", target: 3, type: 'combo', progress: 0, completed: false }
+        ];
+
+        /* RESET */
+
+        function resetGame() {
+            state = "STANDING";
+            reps = 0;
+            score = 0;
+            comboMultiplier = 1;
+            minAngle = 180;
+            angleBuffer = [];
+
+            document.getElementById("reps").textContent = 0;
+            document.getElementById("score").textContent = 0;
+            document.getElementById("angle").textContent = 0;
+            document.getElementById("state").textContent = "STANDING";
+            document.getElementById("combo").style.display = 'none';
+
+            challenges.forEach(c => { c.progress = 0; c.completed = false; });
+            renderChallenges();
+
+            setElevatorNormal();
+            closeDoors();
+            elevator.style.bottom = "85%";
+        }
+
+        resetGame();
+
+        /* ELEVATOR CONTROL */
+
+        function setElevatorNormal() {
+            elevator.className = "elevator-normal";
+        }
+
+        function setElevatorSuccess() {
+            elevator.className = "elevator-success";
+        }
+
+        function setElevatorAlmost() {
+            elevator.className = "elevator-almost";
+        }
+
+        function setElevatorMini() {
+            elevator.className = "elevator-mini";
+        }
+
+        function setElevatorFail() {
+            elevator.className = "elevator-fail";
+        }
+
+        function moveElevator(angle) {
+            let factor = (angle - 70) / (170 - 70);
+            factor = Math.max(0, Math.min(1, factor));
+            elevator.style.bottom = (factor * 85) + "%";
+        }
+
+        function openDoors() {
+            leftDoor.classList.add("open-left");
+            rightDoor.classList.add("open-right");
+        }
+
+        function openDoorsHalf() {
+            leftDoor.classList.add("open-left-half");
+            rightDoor.classList.add("open-right-half");
+        }
+
+        function closeDoors() {
+            leftDoor.classList.remove("open-left");
+            rightDoor.classList.remove("open-right");
+            leftDoor.classList.remove("open-left-half");
+            rightDoor.classList.remove("open-right-half");
+        }
+
+        /* ANGLE */
+
+        function calculateAngle(A, B, C) {
+            const BA = { x: A.x - B.x, y: A.y - B.y };
+            const BC = { x: C.x - B.x, y: C.y - B.y };
+            const dot = BA.x * BC.x + BA.y * BC.y;
+            const magBA = Math.sqrt(BA.x ** 2 + BA.y ** 2);
+            const magBC = Math.sqrt(BC.x ** 2 + BC.y ** 2);
+            const cosine = dot / (magBA * magBC);
+            return Math.acos(Math.max(-1, Math.min(1, cosine))) * (180 / Math.PI);
+        }
+
+        function smoothAngle(angle) {
+            angleBuffer.push(angle);
+            if (angleBuffer.length > 5) angleBuffer.shift();
+            return angleBuffer.reduce((a, b) => a + b) / angleBuffer.length;
+        }
+
+        /* STATE MACHINE AND GAMIFICATION */
+
+        function renderChallenges() {
+            const list = document.getElementById("challenges-list");
+            list.innerHTML = '';
+            challenges.forEach(c => {
+                const el = document.createElement('div');
+                el.className = `challenge-item ${c.completed ? 'completed' : ''}`;
+                el.innerHTML = `
+                    <div class="challenge-title">${c.title}</div>
+                    <div class="challenge-desc">${c.desc} (${c.progress}/${c.target})</div>
+                `;
+                list.appendChild(el);
+            });
+        }
+
+        function updateChallenges(type, val) {
+            let changed = false;
+            challenges.forEach(c => {
+                if (c.completed) return;
+
+                if (c.type === type) {
+                    if (type === 'combo') {
+                        c.progress = Math.max(c.progress, val);
+                    } else {
+                        c.progress++;
+                    }
+
+                    if (c.progress >= c.target) {
+                        c.completed = true;
+                        c.progress = c.target;
+                        createParticles(document.getElementById('challenges-panel'), 50, '#0ff05a');
+                        score += 500; // Bonus for completing challenge
+                        document.getElementById("score").textContent = score;
+                    }
+                    changed = true;
+                }
+            });
+            if (changed) renderChallenges();
+        }
+
+        function addScore(points, isPerfect) {
+            score += points * comboMultiplier;
+            document.getElementById("score").textContent = score;
+
+            if (isPerfect) {
+                comboMultiplier++;
+                document.getElementById("combo").textContent = 'x' + comboMultiplier;
+                document.getElementById("combo").style.display = 'inline-block';
+                updateChallenges('combo', comboMultiplier);
+
+                clearTimeout(comboTimeout);
+                comboTimeout = setTimeout(() => {
+                    comboMultiplier = 1;
+                    document.getElementById("combo").style.display = 'none';
+                }, 5000); // 5 sec to hit next squat to keep combo
+            }
+        }
+
+        function createParticles(element, num, color) {
+            const rect = element.getBoundingClientRect();
+            for (let i = 0; i < num; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.background = color;
+                const size = Math.random() * 8 + 4;
+                p.style.width = size + 'px';
+                p.style.height = size + 'px';
+                p.style.left = (rect.left + rect.width / 2) + 'px';
+                p.style.top = (rect.top + rect.height / 2) + 'px';
+
+                const vx = (Math.random() - 0.5) * 20;
+                const vy = (Math.random() - 0.5) * 20;
+
+                document.body.appendChild(p);
+
+                let opacity = 1;
+                let top = rect.top + rect.height / 2;
+                let left = rect.left + rect.width / 2;
+
+                const anim = setInterval(() => {
+                    opacity -= 0.05;
+                    top += vy;
+                    left += vx;
+                    p.style.opacity = opacity;
+                    p.style.top = top + 'px';
+                    p.style.left = left + 'px';
+
+                    if (opacity <= 0) {
+                        clearInterval(anim);
+                        p.remove();
+                    }
+                }, 30);
+            }
+        }
+
+        function processFrame(landmarks) {
+
+            const hip = landmarks[23];
+            const knee = landmarks[25];
+            const ankle = landmarks[27];
+            if (!hip || !knee || !ankle) return;
+
+            let angle = smoothAngle(calculateAngle(hip, knee, ankle));
+            document.getElementById("angle").textContent = Math.round(angle);
+
+            moveElevator(angle);
+
+            switch (state) {
+
+                case "STANDING":
+                    if (angle < 150) {
+                        state = "DESCENDING";
+                        minAngle = 180;
+                    }
+                    break;
+
+                case "DESCENDING":
+                    if (angle < minAngle) minAngle = angle;
+
+                    if (angle <= 130) {
+                        state = "BOTTOM";
+                    }
+                    else if (angle >= 160) {
+                        // Failed to reach depth before coming up
+                        state = "ASCENDING_INVALID";
+                    }
+                    break;
+
+                case "BOTTOM":
+                    if (angle < minAngle) minAngle = angle;
+                    if (angle > 140) state = "ASCENDING_EVALUATE";
+                    break;
+
+                case "ASCENDING_EVALUATE":
+                    if (angle > 155) {
+                        // Evaluate Rep Quality
+                        if (minAngle <= 90) {
+                            // VALID REP
+                            reps++;
+                            document.getElementById("reps").textContent = reps;
+                            addScore(100, true);
+                            updateChallenges('reps', 1);
+                            updateChallenges('deep', 1);
+
+                            setElevatorSuccess();
+                            openDoors();
+                            createParticles(document.getElementById('shaft'), 30, '#0ff05a');
+
+                        } else if (minAngle <= 110) {
+                            // ALMOST REP
+                            reps++;
+                            document.getElementById("reps").textContent = reps;
+                            addScore(50, false);
+                            updateChallenges('reps', 1);
+
+                            comboMultiplier = 1;
+                            document.getElementById("combo").style.display = 'none';
+
+                            setElevatorAlmost();
+                            openDoorsHalf();
+                            createParticles(document.getElementById('shaft'), 15, '#ffd600');
+
+                        } else if (minAngle <= 130) {
+                            // MINI REP
+                            addScore(20, false);
+                            comboMultiplier = 1;
+                            document.getElementById("combo").style.display = 'none';
+
+                            setElevatorMini();
+                            createParticles(document.getElementById('shaft'), 5, '#00e5ff');
+
+                        } else {
+                            // INVALID REP
+                            comboMultiplier = 1;
+                            document.getElementById("combo").style.display = 'none';
+                            setElevatorFail();
+                        }
+
+                        // Close doors and reset styles
+                        setTimeout(() => {
+                            closeDoors();
+                            setElevatorNormal();
+                        }, 1500);
+
+                        state = "STANDING";
+                    }
+                    else if (angle < minAngle) {
+                        // Dropped back down
+                        state = "BOTTOM";
+                    }
+                    break;
+
+                case "ASCENDING_INVALID":
+                    if (angle > 155) {
+                        // INVALID REP (flash red, no points)
+                        comboMultiplier = 1;
+                        document.getElementById("combo").style.display = 'none';
+                        setElevatorFail();
+                        clearTimeout(comboTimeout);
+
+                        setTimeout(() => {
+                            setElevatorNormal();
+                        }, 800);
+
+                        state = "STANDING";
+                    }
+                    break;
+            }
+
+            let displayState = state.replace('_', ' ');
+            let stateColor = "white";
+
+            if (state === "ASCENDING_EVALUATE" || state === "STANDING") {
+                if (minAngle <= 90 && state === "STANDING" && minAngle > 0) {
+                    displayState = "PERFECT DEPTH!";
+                    stateColor = "#0ff05a";
+                } else if (minAngle <= 110 && state === "STANDING" && minAngle > 0) {
+                    displayState = "ALMOST THERE";
+                    stateColor = "#ffd600";
+                } else if (minAngle <= 130 && state === "STANDING" && minAngle > 0) {
+                    displayState = "MINI REP";
+                    stateColor = "#00e5ff";
+                }
+            }
+
+            if (state === "ASCENDING_INVALID") {
+                displayState = "INVALID - TOO SHALLOW";
+                stateColor = "#ff1744";
+            }
+
+            document.getElementById("state").textContent = displayState;
+            document.getElementById("state").style.color = stateColor;
+        }
+
+        function shareScore() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'FitQuest Elevator Challenge',
+                    text: `I just scored ${score} pts with ${reps} squats on FitQuest! Can you beat my score?`,
+                    url: window.location.href,
+                }).catch(console.error);
+            } else {
+                alert(`Share this link with friends to challenge them!\n\nScore: ${score} pts`);
+            }
+        }
+
+        function endSession() {
+            if (reps > 0 || score > 0) {
+                // Retrieve existing, push new, and resave
+                const history = JSON.parse(localStorage.getItem('fitquest_sessions') || '[]');
+                history.push({
+                    date: new Date().toLocaleDateString(),
+                    reps: reps,
+                    score: score
+                });
+                localStorage.setItem('fitquest_sessions', JSON.stringify(history));
+                alert(`Session Saved to Dashboard!\nTotal Squats: ${reps}\nScore: ${score}`);
+            }
+
+            if (camera) {
+                camera.stop();
+                camera = null;
+            }
+
+            if (video.srcObject) {
+                const tracks = video.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                video.srcObject = null;
+            }
+
+            video.src = "";
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            resetGame();
+        }
+
+        /* MEDIAPIPE */
+
+        const pose = new Pose({
+            locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+        });
+
+        pose.setOptions({
+            modelComplexity: 1,
+            smoothLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        pose.onResults(results => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+
+            if (results.poseLandmarks) {
+                processFrame(results.poseLandmarks);
+                drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, { color: '#00FF00', lineWidth: 4 });
+                drawLandmarks(ctx, results.poseLandmarks, { color: '#FF0000', lineWidth: 2 });
+            }
+        });
+
+        /* WEBCAM */
+
+        function startCamera() {
+            resetGame();
+
+            if (camera) {
+                camera.stop();
+                camera = null;
+            }
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(t => t.stop());
+            }
+            video.src = "";
+            video.srcObject = null;
+
+            camera = new Camera(video, {
+                onFrame: async () => {
+                    await pose.send({ image: video });
+                },
+                width: 640,
+                height: 480
+            });
+
+            camera.start();
+        }
+
+        /* UPLOAD */
+
+        let videoFrameCallbackId = null;
+
+        document.getElementById("uploadVideo").addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            resetGame();
+
+            if (camera) {
+                camera.stop();
+                camera = null;
+            }
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(t => t.stop());
+                video.srcObject = null;
+            }
+            if (videoFrameCallbackId) {
+                cancelAnimationFrame(videoFrameCallbackId);
+            }
+
+            video.src = URL.createObjectURL(file);
+            video.play();
+
+            video.onplay = () => {
+                let lastVideoTime = -1;
+                const loop = async () => {
+                    if (video.paused || video.ended) {
+                        return;
+                    }
+                    if (video.currentTime !== lastVideoTime) {
+                        lastVideoTime = video.currentTime;
+                        await pose.send({ image: video });
+                    }
+                    videoFrameCallbackId = requestAnimationFrame(loop);
+                };
+                loop();
+            };
+
+            // Automatically aggregate results and end session when uploaded video concludes
+            video.onended = () => {
+                endSession();
+            }
+        });
+    </script>
+
+</body>
+
+</html>

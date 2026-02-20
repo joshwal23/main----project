@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>FitQuest – Pose Detection</title>
+    <link rel="stylesheet" href="css/trainer.css?v=2">
+
+    <!-- MediaPipe Pose -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+</head>
+
+<body>
+    <div id="main-layout">
+        <!-- Top Controls (Upload) -->
+        <div id="top-bar-trainer"
+            style="position: absolute; top: 10px; left: 10px; z-index: 1000; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px;">
+            <input type="file" id="upload-video-trainer" accept="video/*" style="color: white; font-weight: bold;">
+        </div>
+
+        <!-- Dashboard Section (Left) -->
+        <div id="dashboard">
+            <div class="stat-box">
+                <span class="label">TIME</span>
+                <span id="timer" class="value">00:00</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">SCORE</span>
+                <span id="score" class="value">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">REPS</span>
+                <span id="rep-count" class="value">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">ANGLE</span>
+                <span id="live-angle" class="value">0°</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">STATUS</span>
+                <span id="squat-status" class="value state-up">UP</span>
+            </div>
+
+            <!-- End Session Button -->
+            <button id="end-session-btn"
+                style="margin-top: 20px; padding: 15px; background: #FF2222; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; transition: scale 0.2s;">
+                END SESSION
+            </button>
+        </div>
+
+        <!-- Video Section (Center) -->
+        <div id="container">
+            <video id="webcam" autoplay muted playsinline></video>
+            <canvas id="output"></canvas>
+
+            <!-- Big Feedback Overlay -->
+            <div id="big-feedback-container">
+                <span id="feedback-msg">READY?</span>
+            </div>
+        </div>
+
+        <!-- Interactive Game Section (Right) -->
+        <div id="game-side">
+            <div id="tube">
+                <div id="ball"></div>
+            </div>
+            <div class="game-label">SQUAT TRACKER</div>
+        </div>
+    </div>
+
+    <script src="js/trainer.js?v=3"></script>
+</body>
+
+
+</html>
