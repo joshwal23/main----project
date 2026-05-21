@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>FitQuest Progress Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0ff05a",
+                        "background-light": "#f5f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white transition-colors duration-200">
+    <div class="flex min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside
+            class="w-64 bg-white dark:bg-[#1a2e20] border-r border-[#dbe6df] dark:border-[#2d4033] flex flex-col fixed h-full">
+            <div class="p-6">
+                <a href="index.html" class="flex items-center gap-2 mb-8 hover:opacity-80 transition-opacity">
+                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <span class="material-symbols-outlined text-background-dark">fitness_center</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold leading-none">FitQuest</h1>
+                        <p class="text-[#608a6e] text-xs font-medium">Squat Master</p>
+                    </div>
+                </a>
+                <nav class="flex flex-col gap-2">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/20 text-[#111813] dark:text-white"
+                        href="dashboard.html">
+                        <span class="material-symbols-outlined fill-1">dashboard</span>
+                        <span class="text-sm font-medium">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#608a6e] hover:bg-background-light dark:hover:bg-white/5 transition-colors"
+                        href="history.html">
+                        <span class="material-symbols-outlined">history</span>
+                        <span class="text-sm font-medium">History</span>
+                    </a>
+                    <!--
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#608a6e] hover:bg-background-light dark:hover:bg-white/5 transition-colors"
+                        href="#">
+                        <span class="material-symbols-outlined">emoji_events</span>
+                        <span class="text-sm font-medium">Challenges</span>
+                    </a>
+                    -->
+                    <a id="profile-btn"
+                        class="flex flex-col gap-1 px-3 py-4 rounded-lg bg-background-light dark:bg-white/5 mt-4"
+                        href="#">
+                        <div class="flex items-center gap-2">
+                            <div
+                                class="size-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                                <span class="material-symbols-outlined text-sm">person</span>
+                            </div>
+                            <span id="sidebar-username" class="text-sm font-bold truncate">User</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mt-3">
+                            <div class="flex flex-col">
+                                <span class="text-[10px] text-[#608a6e] font-bold uppercase">Total Reps</span>
+                                <span id="sidebar-total-reps" class="text-xs font-black">0</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[10px] text-[#608a6e] font-bold uppercase">Sessions</span>
+                                <span id="sidebar-total-sessions" class="text-xs font-black">0</span>
+                            </div>
+                        </div>
+                    </a>
+                    <button id="logout-btn"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors mt-auto mb-4">
+                        <span class="material-symbols-outlined">logout</span>
+                        <span class="text-sm font-medium">Logout</span>
+                    </button>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 ml-64 p-6 space-y-6">
+            <div class="max-w-5xl mx-auto space-y-6">
+                <!-- Header -->
+                <header class="flex flex-wrap justify-between items-end gap-4">
+                    <div class="flex flex-col gap-1">
+                        <h2 class="text-4xl font-black tracking-tight" id="greeting-text">Welcome back!</h2>
+                        <p class="text-[#608a6e] text-lg font-normal">Keep track of your squat journey</p>
+                    </div>
+                    <button id="new-session-btn"
+                        class="px-6 py-3 bg-primary text-background-dark font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-primary/20 hover:brightness-110 transition-all">
+                        <span class="material-symbols-outlined">add</span>
+                        New Session
+                    </button>
+                </header>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div
+                        class="bg-white dark:bg-[#1a2e20] p-6 rounded-xl border border-[#dbe6df] dark:border-[#2d4033] flex flex-col gap-2">
+                        <div class="flex items-center justify-between mb-1">
+                            <p class="text-[#608a6e] text-sm font-medium">Total Squats Today</p>
+                            <span class="material-symbols-outlined text-primary">calendar_today</span>
+                        </div>
+                        <p id="total-squats-today" class="text-3xl font-bold">0</p>
+                        <p class="text-[#078829] text-sm font-medium flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">trending_up</span>
+                        </p>
+                    </div>
+
+                    <div
+                        class="bg-white dark:bg-[#1a2e20] p-6 rounded-xl border border-[#dbe6df] dark:border-[#2d4033] flex flex-col gap-2">
+                        <div class="flex items-center justify-between mb-1">
+                            <p class="text-[#608a6e] text-sm font-medium">Current Streak</p>
+                            <span class="material-symbols-outlined text-primary">local_fire_department</span>
+                        </div>
+                        <p id="current-streak" class="text-3xl font-bold">12 Days</p>
+                        <p class="text-[#078829] text-sm font-medium flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">plus_one</span> Active
+                        </p>
+                    </div>
+
+                    <div
+                        class="bg-white dark:bg-[#1a2e20] p-6 rounded-xl border border-[#dbe6df] dark:border-[#2d4033] flex flex-col gap-2 lg:col-span-2">
+                        <div class="flex items-center justify-between mb-1">
+                            <p class="text-[#608a6e] text-sm font-medium">Monthly Challenge Progress</p>
+                            <span class="material-symbols-outlined text-primary">emoji_events</span>
+                        </div>
+                        <div class="flex items-center gap-4 mt-1">
+                            <div class="flex-1 bg-background-light dark:bg-white/10 h-3 rounded-full overflow-hidden">
+                                <div id="monthly-progress-bar-width" class="bg-primary h-full rounded-full"
+                                    style="width: 72%;"></div>
+                            </div>
+                            <p id="monthly-progress-percent" class="text-lg font-bold">72%</p>
+                        </div>
+                        <p id="monthly-progress-text" class="text-[#608a6e] text-sm">2,160 / 3,000 squats completed</p>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Large Volume Chart -->
+                    <div
+                        class="lg:col-span-2 bg-white dark:bg-[#1a2e20] p-6 rounded-xl border border-[#dbe6df] dark:border-[#2d4033]">
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 class="text-lg font-bold">Weekly Squat Volume</h3>
+                                <p id="weekly-total-reps" class="text-3xl font-bold mt-1">0 <span
+                                        class="text-sm font-normal text-[#608a6e]">Total reps</span></p>
+                            </div>
+                            <div class="flex gap-2">
+                                <span
+                                    class="px-3 py-1 bg-background-light dark:bg-white/5 rounded-lg text-sm font-medium">Last
+                                    7 Days</span>
+                            </div>
+                        </div>
+                        <div class="h-64 flex flex-col justify-end gap-4">
+                            <svg fill="none" height="180" preserveaspectratio="none" viewbox="0 0 478 150" width="100%"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25V149H0V109Z"
+                                    fill="url(#paint0_linear)"></path>
+                                <path
+                                    d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25"
+                                    stroke="#0ff05a" stroke-linecap="round" stroke-width="3"></path>
+                                <defs>
+                                    <lineargradient gradientunits="userSpaceOnUse" id="paint0_linear" x1="236" x2="236"
+                                        y1="1" y2="149">
+                                        <stop stop-color="#0ff05a" stop-opacity="0.3"></stop>
+                                        <stop offset="1" stop-color="#0ff05a" stop-opacity="0"></stop>
+                                    </lineargradient>
+                                </defs>
+                            </svg>
+                            <div class="flex justify-between px-2">
+                                <p class="text-[#608a6e] text-xs font-bold">Mon</p>
+                                <p class="text-[#608a6e] text-xs font-bold">Tue</p>
+                                <p class="text-[#608a6e] text-xs font-bold">Wed</p>
+                                <p class="text-[#608a6e] text-xs font-bold">Thu</p>
+                                <p class="text-[#608a6e] text-xs font-bold">Fri</p>
+                                <p class="text-[#608a6e] text-xs font-bold">Sat</p>
+                                <p class="text-[#608a6e] text-xs font-bold">Sun</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Circular Gauge / Goal -->
+                    <div
+                        class="bg-white dark:bg-[#1a2e20] p-6 rounded-xl border border-[#dbe6df] dark:border-[#2d4033] flex flex-col items-center justify-center text-center">
+                        <div class="flex justify-between items-center w-full mb-4">
+                            <h3 class="text-lg font-bold">Monthly Goal</h3>
+                            <button id="set-goal-btn"
+                                class="text-primary text-xs font-bold hover:underline bg-primary/10 px-2 py-1 rounded">Set
+                                Goal</button>
+                        </div>
+                        <div class="relative w-40 h-40 mb-4">
+                            <svg class="w-full h-full transform -rotate-90">
+                                <circle class="text-background-light dark:text-white/5" cx="80" cy="80"
+                                    fill="transparent" r="70" stroke="currentColor" stroke-width="12"></circle>
+                                <circle cx="80" cy="80" fill="transparent" r="70" stroke="url(#gauge_gradient)"
+                                    stroke-dasharray="440" stroke-dashoffset="123" stroke-linecap="round"
+                                    stroke-width="12"></circle>
+                                <defs>
+                                    <lineargradient id="gauge_gradient" x1="0%" x2="100%" y1="0%" y2="0%">
+                                        <stop offset="0%" stop-color="#0ff05a"></stop>
+                                        <stop offset="100%" stop-color="#078829"></stop>
+                                    </lineargradient>
+                                </defs>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span id="gauge-percent" class="text-3xl font-black">72%</span>
+                                <span
+                                    class="text-[10px] text-[#608a6e] font-bold uppercase tracking-wider">Complete</span>
+                            </div>
+                        </div>
+                        <p class="font-medium">Monthly Squat-a-thon</p>
+                        <p id="gauge-text" class="text-[#608a6e] text-sm mt-1">840 reps to reach goal</p>
+                    </div>
+                </div>
+
+                <!-- Recent Sessions -->
+                <div
+                    class="bg-white dark:bg-[#1a2e20] rounded-xl border border-[#dbe6df] dark:border-[#2d4033] overflow-hidden">
+                    <div
+                        class="px-6 py-5 border-b border-[#dbe6df] dark:border-[#2d4033] flex justify-between items-center">
+                        <h3 class="text-lg font-bold">Recent Sessions</h3>
+                        <button class="text-primary text-sm font-bold hover:underline">View All</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-background-light/50 dark:bg-white/5">
+                                <tr>
+                                    <th class="px-6 py-3 text-xs font-bold text-[#608a6e] uppercase">Date</th>
+                                    <th class="px-6 py-3 text-xs font-bold text-[#608a6e] uppercase text-center">Reps
+                                    </th>
+                                    <th class="px-6 py-3 text-xs font-bold text-[#608a6e] uppercase text-center">Avg
+                                        Depth</th>
+                                    <th class="px-6 py-3 text-xs font-bold text-[#608a6e] uppercase text-right">
+                                        Intensity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sessions-table-body" class="divide-y divide-[#dbe6df] dark:divide-[#2d4033]">
+                                <tr class="hover:bg-background-light dark:hover:bg-white/5 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <p class="font-medium">Today, 8:45 AM</p>
+                                        <p class="text-xs text-[#608a6e]">Morning Workout</p>
+                                    </td>
+                                    <td class="px-6 py-4 text-center font-bold">150</td>
+                                    <td class="px-6 py-4 text-center">
+                                        <div
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/20 text-[#078829] dark:text-primary rounded-full text-xs font-bold">
+                                            <span class="material-symbols-outlined text-xs">straighten</span> 94%
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <span
+                                            class="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded text-xs font-bold">High</span>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-background-light dark:hover:bg-white/5 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <p class="font-medium">Yesterday, 6:12 PM</p>
+                                        <p class="text-xs text-[#608a6e]">Evening Burn</p>
+                                    </td>
+                                    <td class="px-6 py-4 text-center font-bold">120</td>
+                                    <td class="px-6 py-4 text-center">
+                                        <div
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/20 text-[#078829] dark:text-primary rounded-full text-xs font-bold">
+                                            <span class="material-symbols-outlined text-xs">straighten</span> 91%
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <span
+                                            class="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded text-xs font-bold">Medium</span>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-background-light dark:hover:bg-white/5 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <p class="font-medium">Mar 12, 7:30 AM</p>
+                                        <p class="text-xs text-[#608a6e]">Speed Reps</p>
+                                    </td>
+                                    <td class="px-6 py-4 text-center font-bold">200</td>
+                                    <td class="px-6 py-4 text-center">
+                                        <div
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-xs font-bold">
+                                            <span class="material-symbols-outlined text-xs">warning</span> 82%
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <span
+                                            class="px-2 py-1 bg-primary/20 text-[#078829] dark:text-primary rounded text-xs font-bold">Extreme</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <!-- Difficulty Selection Modal -->
+    <div id="difficulty-modal" style="display:none;"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div
+            class="bg-white dark:bg-[#1a2e20] rounded-2xl border border-[#dbe6df] dark:border-[#2d4033] p-8 w-full max-w-md shadow-2xl">
+            <h2 class="text-2xl font-black text-center mb-2">Choose Difficulty</h2>
+            <p class="text-[#608a6e] text-sm text-center mb-6">Select a workout level to begin your session</p>
+            <div class="flex flex-col gap-4">
+                <button data-sets="2" data-reps="6"
+                    class="difficulty-btn flex items-center justify-between px-6 py-4 rounded-xl border-2 border-primary/30 hover:border-primary hover:bg-primary/10 transition-all group">
+                    <div class="text-left">
+                        <p class="font-black text-lg">🟢 Beginner</p>
+                        <p class="text-[#608a6e] text-sm">2 sets × 6 reps</p>
+                    </div>
+                    <span
+                        class="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                </button>
+                <button data-sets="3" data-reps="8"
+                    class="difficulty-btn flex items-center justify-between px-6 py-4 rounded-xl border-2 border-yellow-400/30 hover:border-yellow-400 hover:bg-yellow-400/10 transition-all group">
+                    <div class="text-left">
+                        <p class="font-black text-lg">🟡 Intermediate</p>
+                        <p class="text-[#608a6e] text-sm">3 sets × 8 reps</p>
+                    </div>
+                    <span
+                        class="material-symbols-outlined text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                </button>
+                <button data-sets="3" data-reps="10"
+                    class="difficulty-btn flex items-center justify-between px-6 py-4 rounded-xl border-2 border-red-400/30 hover:border-red-400 hover:bg-red-400/10 transition-all group">
+                    <div class="text-left">
+                        <p class="font-black text-lg">🔴 Advanced</p>
+                        <p class="text-[#608a6e] text-sm">3 sets × 10 reps</p>
+                    </div>
+                    <span
+                        class="material-symbols-outlined text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                </button>
+                <button data-mode="multiplayer" data-sets="3" data-reps="10"
+                    class="difficulty-btn flex items-center justify-between px-6 py-4 rounded-xl border-2 border-purple-400/30 hover:border-purple-400 hover:bg-purple-400/10 transition-all group">
+                    <div class="text-left">
+                        <p class="font-black text-lg">⚔️ Multiplayer</p>
+                        <p class="text-[#608a6e] text-sm">Challenge a rival live!</p>
+                    </div>
+                    <span
+                        class="material-symbols-outlined text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                </button>
+            </div>
+            <button id="close-difficulty-modal"
+                class="mt-6 w-full text-center text-[#608a6e] text-sm hover:underline">Cancel</button>
+        </div>
+    </div>
+
+    <script src="js/firebase.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/session.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>FitQuest – Pose Detection</title>
+    <link rel="stylesheet" href="css/trainer.css?v=2">
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+    <!-- MediaPipe Pose -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+    <!-- PeerJS for Multiplayer -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+
+<body>
+    <script>
+        if (!localStorage.getItem('fitquest_user')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+
+    <!-- Multiplayer Setup Overlay -->
+    <div id="multiplayer-bar" style="display: none;">
+        <div id="my-id-container">
+            <span>MY ID:</span>
+            <span id="my-peer-id">...</span>
+            <button id="copy-id-btn">COPY</button>
+        </div>
+        <div id="connect-container">
+            <input type="text" id="peer-id-input" placeholder="Rival ID">
+            <button id="connect-btn">CHALLENGE</button>
+        </div>
+        <div id="status-display">STATUS: <span id="connection-status">ALONE</span></div>
+    </div>
+    
+    <div id="mode-label" style="display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: #0ff05a; color: #102216; font-weight: 900; padding: 4px 12px; border-radius: 4px; z-index: 1000; letter-spacing: 2px;">MULTIPLAYER MODE</div>
+
+    <div id="main-layout">
+        <!-- Dashboard Section (Left) -->
+        <div id="dashboard">
+            <div class="stat-box">
+                <span class="label">TIME</span>
+                <span id="timer" class="value">00:00</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">SCORE</span>
+                <span id="score" class="value">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">REPS</span>
+                <span id="rep-count" class="value">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">ANGLE</span>
+                <span id="live-angle" class="value">0°</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">STATUS</span>
+                <span id="squat-status" class="value state-up">UP</span>
+            </div>
+
+            <!-- Set / Rep Indicator -->
+            <div id="set-rep-indicator"
+                style="font-size: 16px; font-weight: 900; letter-spacing: 2px; color: #0ff05a; text-align: center; padding: 8px 0; border-top: 1px solid rgba(0,255,90,0.2); margin-top: 8px;">
+                SET 1/3 · REP 0/8
+            </div>
+
+            <!-- End Session Button -->
+            <button id="end-session-btn">
+                END SESSION
+            </button>
+        </div>
+
+        <!-- Video Section (Center) -->
+        <div id="container">
+            <video id="webcam" autoplay muted playsinline></video>
+            <canvas id="output"></canvas>
+
+            <!-- Big Feedback Overlay -->
+            <div id="big-feedback-container">
+                <span id="feedback-msg">READY?</span>
+            </div>
+
+            <!-- Toast Notification Container -->
+            <div id="feedback-container"
+                style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 100; pointer-events: none;">
+            </div>
+        </div>
+
+        <!-- Interactive Game Section (Right) -->
+        <div id="game-side">
+            <div id="mountain-container">
+                <div id="mountain-bg" style="background-image: url('assets/mountain_bg.png');"></div>
+                <div id="climber-container">
+                    <div id="climber">🧗</div>
+                </div>
+                <div id="rival-climber-container" style="display: none;">
+                    <div id="rival-climber">🧗‍♀️</div>
+                    <div id="rival-name">RIVAL</div>
+                </div>
+                <div id="altitude-display">
+                    <div class="alt-row">
+                        <span class="label">YOU</span>
+                        <span id="altitude-value" class="value">0m</span>
+                    </div>
+                    <div id="rival-altitude-row" class="alt-row"
+                        style="display: none; border-top: 1px solid rgba(255,0,0,0.3); padding-top: 5px; margin-top: 5px;">
+                        <span class="label" style="color: #FF4444;">RIVAL</span>
+                        <span id="rival-altitude-value" class="value" style="color: #FF4444;">0m</span>
+                    </div>
+                </div>
+            </div>
+            <div class="game-label">MOUNTAIN CLIMB</div>
+        </div>
+    </div> <!-- End Main Layout -->
+
+    <div id="summary-overlay" style="display: none;">
+        <div id="summary-card">
+            <h2 style="font-size: 32px; margin-bottom: 20px; color: #00FF00;">SESSION SUMMARY</h2>
+
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">TOTAL REPS</span>
+                    <span id="summary-reps" class="summary-value">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">DURATION</span>
+                    <span id="summary-duration" class="summary-value">0m 0s</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">GOOD REPS</span>
+                    <span id="summary-good-reps" class="summary-value" style="color:#0ff05a;">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">BAD REPS</span>
+                    <span id="summary-bad-reps" class="summary-value" style="color:#FF4444;">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">AVG DEPTH</span>
+                    <span id="summary-avg-depth" class="summary-value">0°</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">BEST DEPTH</span>
+                    <span id="summary-best-depth" class="summary-value">0°</span>
+                </div>
+                <div class="summary-item" style="grid-column: span 2;">
+                    <span class="summary-label">TOTAL SCORE</span>
+                    <span id="summary-score" class="summary-value" style="color: #FFD700;">0</span>
+                </div>
+            </div>
+
+            <button id="continue-btn">BACK TO DASHBOARD</button>
+        </div>
+    </div>
+
+    <!-- SUMMIT REACHED OVERLAY -->
+    <div id="summit-overlay"
+        style="display:none; position:fixed; inset:0; z-index:210; background:rgba(0,0,0,0.92); backdrop-filter:blur(10px); flex-direction:column; align-items:center; justify-content:center;">
+        <div style="text-align:center; color:white; animation: summitGlow 1s ease-in-out infinite alternate;">
+            <div style="font-size:80px; margin-bottom:16px; filter: drop-shadow(0 0 20px #FFD700);">🏔️🚩</div>
+            <p
+                style="font-size:36px; font-weight:900; letter-spacing:6px; color:#FFD700; text-transform:uppercase; margin-bottom:8px;">
+                SUMMIT REACHED!</p>
+            <button id="summit-continue-btn"
+                style="background:#FFD700; color:#000; font-weight:900; font-size:16px; letter-spacing:2px; padding:14px 40px; border:none; border-radius:12px; cursor:pointer; text-transform:uppercase;">VIEW
+                SUMMARY</button>
+            <p style="font-size:13px; color:#555; margin-top:14px;">or press <kbd
+                    style="background:#222; border:1px solid #555; padding:2px 8px; border-radius:4px;">ENTER</kbd></p>
+        </div>
+    </div>
+    <style>
+        @keyframes summitGlow {
+            from {
+                text-shadow: none;
+            }
+
+            to {
+                text-shadow: 0 0 40px #FFD700, 0 0 80px #FFD700;
+            }
+        }
+    </style>
+
+    <!-- REST MODE OVERLAY -->
+
+    <div id="rest-overlay"
+        style="display:none; position:fixed; inset:0; z-index:200; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); flex-direction:column; align-items:center; justify-content:center;">
+        <div style="text-align:center; color:white;">
+            <p
+                style="font-size:20px; letter-spacing:4px; color:#0ff05a; font-weight:800; text-transform:uppercase; margin-bottom: 8px;">
+                ✅ SET COMPLETE</p>
+            <p style="font-size:18px; color:#aaa; margin-bottom:20px;">Rest and recover</p>
+            <div id="rest-countdown" style="font-size: 100px; font-weight:900; color:#0ff05a; line-height:1;">15</div>
+            <p style="font-size:16px; color:#888; margin-top: 20px;">seconds remaining</p>
+            <p style="font-size:13px; color:#555; margin-top:10px;">Press <kbd
+                    style="background:#222; border:1px solid #555; padding: 2px 8px; border-radius:4px;">ENTER</kbd> to
+                skip</p>
+        </div>
+    </div>
+
+    <script src="js/firebase.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/session.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/squatEngine.js"></script>
+    <script src="js/gameEngine.js"></script>
+    <script src="js/multiplayer.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+
+</html>

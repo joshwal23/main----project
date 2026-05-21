@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>FitQuest - Master the King of All Exercises</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;family=Noto+Sans:wght@100..900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#bfff00",
+                        "background-light": "#f8faf9",
+                        "background-dark": "#0a0c0b",
+                        "surface-dark": "#161a18",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"],
+                        "sans": ["Noto Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base { body { @apply font-sans antialiased; } h1, h2, h3, h4 { @apply font-display; } }
+    </style>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+
+<body class="bg-background-dark text-white">
+    <div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+        <div
+            class="sticky top-0 z-50 flex justify-center border-b border-white/5 bg-background-dark/80 backdrop-blur-md px-6 lg:px-40 py-4">
+            <header class="flex w-full max-w-[1100px] items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="size-8 text-primary">
+                        <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                            <path clip-rule="evenodd" d="M24 4H6V17.3333V30.6667H24V44H42V30.6667V17.3333H24V4Z"
+                                fill="currentColor" fill-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-white text-2xl font-black leading-tight tracking-tight">FitQuest</h2>
+                </div>
+                <nav class="hidden md:flex items-center gap-10">
+                    <a class="text-white/70 text-sm font-medium hover:text-primary transition-colors"
+                        href="#about">About the Squat</a>
+                    <a class="text-white/70 text-sm font-medium hover:text-primary transition-colors" href="#why">Why
+                        FitQuest?</a>
+                    <button id="nav-login-btn"
+                        class="flex items-center justify-center rounded-lg h-10 px-6 bg-primary text-background-dark text-sm font-bold hover:brightness-110 transition-all">
+                        <span>Login</span>
+                    </button>
+                </nav>
+                <div class="md:hidden">
+                    <span class="material-symbols-outlined text-white">menu</span>
+                </div>
+            </header>
+        </div>
+        <section class="flex justify-center px-6 lg:px-40 py-16 lg:py-24">
+            <div class="flex w-full max-w-[1100px] flex-col lg:flex-row items-center gap-12">
+                <div class="flex flex-col gap-8 lg:w-1/2">
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 w-fit">
+                        <span class="text-primary text-xs font-bold uppercase tracking-widest">Master Your
+                            Foundation</span>
+                    </div>
+                    <div class="flex flex-col gap-6">
+                        <h1 class="text-white text-5xl lg:text-7xl font-black leading-[1.1] tracking-tight"> Master the
+                            <span class="text-primary">King</span> of All Exercises
+                        </h1>
+                        <p class="text-white/70 text-lg lg:text-xl leading-relaxed max-w-[540px]"> The squat is more
+                            than just a movement—it's the ultimate test of strength and mobility. FitQuest guides you to
+                            perfect execution with precision AI tracking. </p>
+                    </div>
+                    <div class="flex flex-col gap-4">
+                        <div class="flex flex-col sm:flex-row gap-4 items-center">
+                            <input type="text" id="username-input" placeholder="Enter your username"
+                                class="w-full sm:w-64 h-14 px-6 rounded-xl bg-white/5 border border-white/20 text-white placeholder:text-white/30 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                            <button id="start-journey-btn"
+                                class="w-full sm:w-auto flex items-center justify-center rounded-xl h-14 px-10 bg-primary text-background-dark text-lg font-bold hover:scale-105 transition-transform shadow-[0_0_20px_rgba(191,255,0,0.2)]">
+                                <span>Start Journey</span>
+                            </button>
+                        </div>
+                        <p class="text-white/40 text-xs">No password required. This is a local-only demo.</p>
+                    </div>
+                </div>
+                <div class="w-full lg:w-1/2 relative">
+                    <div class="absolute -inset-4 bg-primary/20 blur-3xl rounded-full"></div>
+                    <div class="relative w-full aspect-[4/3] bg-center bg-no-repeat bg-cover rounded-2xl shadow-2xl border border-white/10"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBX9OyvcA-ugEw0KAW9qioShkooKlrVnYnHHB4EylZPn_o-IaEuHdrdhYANTcldIQUy7tLz--eeHqxu6KtfsniHALorBZrbEEFtK-Ns5CIA0OJ785me2OvRUZU18ltQB2vQLn3WEF9czXEhFdFIhFS7-BupcLF5dYavG55AwgAiL7PP2EFZAnj8zBSCnPx9fvhPON--5vjeOJzyBSeciI4DYtnCKsQJDiXCTX2yEBtxkA_02FfVuzpaVX-T-8eE72KWBowf8une98A");'>
+                        <div
+                            class="absolute bottom-6 left-6 right-6 p-4 bg-background-dark/80 backdrop-blur-md rounded-xl border border-white/10 flex items-center gap-4">
+                            <div
+                                class="size-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                                <span class="material-symbols-outlined">check_circle</span>
+                            </div>
+                            <div>
+                                <p class="text-white font-bold text-sm">Optimal Form Detected</p>
+                                <p class="text-white/60 text-xs">Hip crease below knee level • Spine neutral</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="flex justify-center px-6 lg:px-40 py-24 bg-surface-dark/30" id="about">
+            <div class="flex w-full max-w-[1100px] flex-col gap-16">
+                <div class="flex flex-col gap-4 max-w-[800px]">
+                    <h2 class="text-primary text-sm font-bold uppercase tracking-widest">Educational Deep Dive</h2>
+                    <h3 class="text-white text-4xl lg:text-5xl font-black">About the Squat</h3>
+                    <p class="text-white/60 text-lg">Understanding why and how to squat is the first step toward
+                        physical dominance. It’s a functional movement pattern that translates to every aspect of life.
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div
+                        class="group p-8 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                        <div
+                            class="size-14 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined !text-3xl">flex_direction</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-white mb-3">Mobility &amp; Longevity</h4>
+                        <p class="text-white/50 leading-relaxed">Regular squatting improves joint health in the hips,
+                            knees, and ankles, promoting better balance and reducing the risk of injury as you age.</p>
+                    </div>
+                    <div
+                        class="group p-8 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                        <div
+                            class="size-14 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined !text-3xl">fitness_center</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-white mb-3">Total Muscle Building</h4>
+                        <p class="text-white/50 leading-relaxed">While famous for building quads and glutes, squats
+                            trigger a systemic hormonal response that aids muscle growth across the entire body.</p>
+                    </div>
+                    <div
+                        class="group p-8 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                        <div
+                            class="size-14 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined !text-3xl">sports_gymnastics</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-white mb-3">Core Strength</h4>
+                        <p class="text-white/50 leading-relaxed">Squatting forces your midsection to work overtime to
+                            stabilize the spine, resulting in a stronger core than many traditional ab exercises.</p>
+                    </div>
+                </div>
+                <div
+                    class="mt-8 p-10 rounded-2xl bg-gradient-to-r from-primary/10 to-transparent border-l-4 border-primary">
+                    <h4 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">menu_book</span> Proper Technique
+                        Fundamentals
+                    </h4>
+                    <div class="grid md:grid-cols-2 gap-10">
+                        <ul class="space-y-4">
+                            <li class="flex gap-4">
+                                <span class="text-primary font-bold">01.</span>
+                                <span class="text-white/70"><strong>The Stance:</strong> Feet shoulder-width apart, toes
+                                    slightly pointed out. Weight centered over mid-foot.</span>
+                            </li>
+                            <li class="flex gap-4">
+                                <span class="text-primary font-bold">02.</span>
+                                <span class="text-white/70"><strong>The Descent:</strong> Hinge at the hips first, then
+                                    bend knees. Keep your chest up and core braced throughout.</span>
+                            </li>
+                        </ul>
+                        <ul class="space-y-4">
+                            <li class="flex gap-4">
+                                <span class="text-primary font-bold">03.</span>
+                                <span class="text-white/70"><strong>The Depth:</strong> Aim for thighs parallel to the
+                                    floor or lower (the "crease of hip" below the knee).</span>
+                            </li>
+                            <li class="flex gap-4">
+                                <span class="text-primary font-bold">04.</span>
+                                <span class="text-white/70"><strong>The Drive:</strong> Push through the floor with your
+                                    whole foot, keeping knees in line with toes.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="flex justify-center px-6 lg:px-40 py-24" id="why">
+            <div class="flex w-full max-w-[1100px] flex-col lg:flex-row items-center gap-20">
+                <div class="lg:w-1/2 flex flex-col gap-8 order-2 lg:order-1">
+                    <h2 class="text-white text-4xl lg:text-5xl font-black">Why FitQuest?</h2>
+                    <div class="space-y-8">
+                        <div class="flex gap-6">
+                            <div
+                                class="size-12 shrink-0 rounded-full border border-primary/30 flex items-center justify-center text-primary">
+                                <span class="material-symbols-outlined">center_focus_strong</span>
+                            </div>
+                            <div>
+                                <h5 class="text-xl font-bold text-white mb-2">Real-time AI Feedback</h5>
+                                <p class="text-white/50">Our proprietary computer vision technology analyzes your
+                                    skeleton in real-time, correcting your form before you even finish the rep.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-6">
+                            <div
+                                class="size-12 shrink-0 rounded-full border border-primary/30 flex items-center justify-center text-primary">
+                                <span class="material-symbols-outlined">analytics</span>
+                            </div>
+                            <div>
+                                <h5 class="text-xl font-bold text-white mb-2">Depth Tracking</h5>
+                                <p class="text-white/50">Never wonder if you're hitting depth again. FitQuest tracks
+                                    your range of motion and provides an exact percentage of completion.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-6">
+                            <div
+                                class="size-12 shrink-0 rounded-full border border-primary/30 flex items-center justify-center text-primary">
+                                <span class="material-symbols-outlined">trending_up</span>
+                            </div>
+                            <div>
+                                <h5 class="text-xl font-bold text-white mb-2">Injury Prevention</h5>
+                                <p class="text-white/50">By identifying technical breakdown in real-time, FitQuest helps
+                                    you avoid the common pitfalls that lead to lower back and knee pain.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:w-1/2 order-1 lg:order-2">
+                    <div class="relative rounded-2xl overflow-hidden border border-white/10 group">
+                        <div class="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent z-10">
+                        </div>
+                        <img alt="AI form tracking visualization"
+                            class="w-full h-[500px] object-cover transition-transform duration-700 group-hover:scale-105"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxPKekoIib7FSRw-PU0FUWzomaXx83N0KVNWYUn9aBFr_IM7giuloOokN4JDTcKZkgjm060sRdIOlUSjSw1sBm7adk9jxkQzDIESyW8Sf0Ahr6xXOp_e56VXtO5IpgYv5Kkc1d3Rz8n10EdaKLvSBm1izx3M73hpyPGFJ1l7yYI31PR_3ZQFPcSljzgMAmuVRqmYELkE1KZoJSNqsew7f5cqWqOcWEiixiZoo7IRNw09yPRSDBQ3gYkjpk4IFQ0b9UTlhxe9NxZDA" />
+                        <div class="absolute inset-0 z-20 p-8 flex flex-col justify-end">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="inline-block size-2 rounded-full bg-primary animate-pulse"></span>
+                                <span class="text-xs font-bold text-primary uppercase">Active Tracking</span>
+                            </div>
+                            <p class="text-white text-lg font-bold">Precision Skeleton Mapping</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="flex justify-center px-6 lg:px-40 py-24 border-t border-white/5">
+            <div
+                class="w-full max-w-[1100px] rounded-3xl bg-gradient-to-br from-primary/20 via-primary/5 to-transparent border border-primary/20 p-12 lg:p-20 text-center relative overflow-hidden">
+                <div class="relative z-10 flex flex-col items-center gap-8">
+                    <h2 class="text-white text-4xl lg:text-6xl font-black max-w-[800px] leading-tight"> Ready to
+                        transform your strength? </h2>
+                    <p class="text-white/70 text-lg lg:text-xl max-w-[600px]"> Join the community of lifters
+                        prioritizing precision over ego. Start your FitQuest journey today. </p>
+                    <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                        <button onclick="document.getElementById('username-input').focus()"
+                            class="flex items-center justify-center rounded-xl h-14 px-12 bg-primary text-background-dark text-lg font-bold hover:scale-105 transition-transform shadow-[0_0_30px_rgba(191,255,0,0.3)]">
+                            <span>Get Started Now</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="absolute -bottom-24 -right-24 size-96 bg-primary/5 rounded-full blur-3xl"></div>
+            </div>
+        </section>
+        <footer class="flex justify-center px-6 lg:px-40 border-t border-white/5 bg-surface-dark">
+            <div class="flex w-full max-w-[1100px] flex-col gap-12 py-12">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+                    <div class="flex items-center gap-3">
+                        <div class="size-6 text-primary">
+                            <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                                <path clip-rule="evenodd" d="M24 4H6V17.3333V30.6667H24V44H42V30.6667V17.3333H24V4Z"
+                                    fill="currentColor" fill-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <span class="text-white text-xl font-bold">FitQuest</span>
+                    </div>
+                    <div class="flex flex-wrap gap-8">
+                        <a class="text-white/50 text-sm hover:text-white transition-colors" href="#">Education</a>
+                        <a class="text-white/50 text-sm hover:text-white transition-colors" href="#">Community</a>
+                        <a class="text-white/50 text-sm hover:text-white transition-colors" href="#">Privacy Policy</a>
+                        <a class="text-white/50 text-sm hover:text-white transition-colors" href="#">Terms of
+                            Service</a>
+                    </div>
+                    <div class="flex gap-4">
+                        <a class="size-10 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:bg-primary/20 hover:text-primary transition-all"
+                            href="#">
+                            <span class="material-symbols-outlined !text-xl">public</span>
+                        </a>
+                        <a class="size-10 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:bg-primary/20 hover:text-primary transition-all"
+                            href="#">
+                            <span class="material-symbols-outlined !text-xl">smart_display</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-white/5">
+                    <p class="text-white/30 text-xs">© 2024 FitQuest. All rights reserved. Professional strength
+                        training platform.</p>
+                    <p class="text-white/30 text-xs">Forging strength through precision and science.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+    <script src="js/firebase.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/landing.js"></script>
+</body>
+
+</html>
